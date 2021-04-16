@@ -1,0 +1,166 @@
+# in R on server; run in DADA2 v 1.14.1
+# run with all samples from DeepCCZ project, including some from sites not reported in this manuscript
+
+library(dada2); packageVersion("dada2")
+setwd("~/DCmerge”)
+path <- "~/DCmerge”
+forward_reads <- sort(list.files(path,pattern="_R1_001.fastq.gz",full.names=TRUE))
+reverse_reads <- sort(list.files(path,pattern="_R2_001.fastq.gz",full.names=TRUE))
+sample.names <- forward_reads
+filtFs <- file.path(path, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
+filtRs <- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
+names(filtFs) <- sample.names
+names(filtRs) <- sample.names
+filtered_out <- filterAndTrim(forward_reads, filtFs, reverse_reads, filtRs, truncLen=c(245,160),maxN=0, maxEE=c(4,8), truncQ=10, rm.phix=TRUE, compress=TRUE,multithread=TRUE)
+write.table(filtered_out, "filtered_out.txt")
+errF <- learnErrors(filtFs, nbases=3e+08, multithread=TRUE)
+errR <- learnErrors(filtRs, nbases=3e+08, multithread=TRUE)
+pdf("~/DCmerge/errF.pdf")
+plotErrors(errF, nominalQ=TRUE)
+dev.off()
+pdf("~/DCmerge/errR.pdf")
+plotErrors(errR, nominalQ=TRUE)
+dev.off()
+derep_forward <- derepFastq(filtFs, verbose=TRUE)
+names(derep_forward) <- sample.names
+derep_reverse <- derepFastq(filtRs, verbose=TRUE)
+names(derep_reverse) <- sample.names
+dada_forward <- dada(derep_forward, err=errF, pool=“pseudo”)
+dada_reverse <- dada(derep_reverse, err=errR, pool=“pseudo”) 
+merged_amplicons <- mergePairs(dada_forward, derep_forward, dada_reverse, derep_reverse, verbose=TRUE)
+head(merged_amplicons)
+seqtab <- makeSequenceTable(merged_amplicons)
+class(seqtab)
+dim(seqtab)
+seqtab.nochim <- removeBimeraDenovo(seqtab, verbose=T)
+sum(seqtab.nochim)/sum(seqtab)
+getN <- function(x) sum(getUniques(x))
+track <- cbind(filtered_out, sapply(dada_forward, getN), sapply(dada_reverse, getN), sapply(merged_amplicons, getN), rowSums(seqtab.nochim))
+colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "nonchim")
+rownames(track) <- sample.names
+head(track)
+write.table(track, "track_seqnumbers.tsv",sep="\t")
+taxa <- assignTaxonomy(seqtab.nochim, "~/DCmerge/silva_nr_v138_train_set.fa.gz", tryRC=T)
+taxa.plus <- addSpecies(taxa,"~/DCmerge/silva_species_assignment_v138.fa.gz", verbose=TRUE)   
+unname(taxa.plus)
+asv_seqs <- colnames(seqtab.nochim)
+asv_headers <- vector(dim(seqtab.nochim)[2], mode="character")
+for (i in 1:dim(seqtab.nochim)[2]) {
+ asv_headers[i] <- paste(">ASV", i, sep="_")
+ }
+asv_fasta <- c(rbind(asv_headers, asv_seqs))
+write.table(asv_fasta,"DCmerge_run3_18July20.fasta",sep="\t",quote=F, col.names=NA)
+asv_tab <- t(seqtab.nochim)
+row.names(asv_tab) <- sub(">", "", asv_headers)
+write.table(asv_tab,"DCmerge_run3_ASVcounts_18July20.tsv",sep="\t", quote=F, col.names=NA) 
+asv_tax <- taxa.plus
+row.names(asv_tax) <- sub(">", "", asv_headers)
+write.table(asv_tax,"DCmerge_run3_ASVtaxa_18July20.tsv",sep="\t", quote=F, col.names=NA)
+
+
+# in Excel, manually curated to remove eukaryotes, plastids, mitochondria, and sequences unclassified at the domain level
+# also restricted to datasets planning to include in this manuscript
+
+
+# for the main dataset, which was restricted to 0.2 µm filter size water column samples, samples were randomly subsampled to 7,125 sequences per sample using R package vegan 2.5-6 in RStudio
+
+library("vegan")
+setwd("~/Desktop/vegan")
+DC_unnorm_to_flip <- read.table("~/Desktop/vegan/DCmerge_run3_topo_no3s_unnorm.csv",sep=",", header=TRUE, row.names=1)
+View(DC_unnorm_to_flip)
+DC_unnorm <- t(DC_unnorm_to_flip)
+View(DC_unnorm)
+DC_norm <- matrix(nrow=210,ncol=55207)
+DC_norm <- rrarefy(DC_unnorm,7125)
+View(DC_norm)
+DC_norm_flip <- t(DC_norm)
+View(DC_norm_flip)
+write.table(DC_norm_flip,"~/Desktop/vegan/DCmerge_run3_topo_no3s_20July20_norm7125.csv",sep=",")
+
+
+# singlet ASVs were manually removed
+# relative abundance was manually calculated in Excel
+
+
+# sequences were aligned in preparation for generating UniFrac matrix; in R on server
+
+library(DECIPHER)
+fas <- "~/DCmerge_topo_no3s/DCmerge_run3_topo_no3s_fasta.txt"
+dna <- readDNAStringSet(fas)
+dna
+aligned_DNA <- AlignSeqs(dna)
+aligned_DNA
+DNA_staggered <- StaggerAlignment(aligned_DNA)
+DNA_staggered
+writeXStringSet(DNA_staggered, file="~/DCmerge_topo_no3s/DCmerge_run3_topo_no3s_alignedfasta.txt")
+
+
+# weighted UniFrac matrix was generated using aligned sequences and relative abundance table; in R on server
+
+setwd("~/DCmerge_topo_no3s")
+library(phangorn)
+file="~/DCmerge_topo_no3s/DCmerge_run3_topo_no3s_alignedfasta.txt"
+data = read.phyDat(file, format="fasta", type="DNA")
+matrix <- dist.ml(data)
+treeUPGMA <- upgma(matrix)
+pdf("~/DCmerge_topo_no3s/tree.pdf")
+plot(treeUPGMA, main="UPGMA")
+dev.off()
+OTUtab <- read.table("~/DCmerge_topo_no3s/DCmerge_run3_topo_no3s_relabund.csv",sep=",", header=TRUE, row.names=1)
+library(phyloseq)
+OTU = otu_table(OTUtab, taxa_are_rows=TRUE)
+physeq = phyloseq(OTU, treeUPGMA)
+physeq
+UniFrac(physeq, weighted=TRUE, normalized=TRUE, parallel=FALSE, fast=TRUE) 
+
+
+# the process of subsampling through distance matrix generation was repeated for the dataset that included the 3 µm filter size water column samples, wherein samples were randomly subsampled to 3,025 sequences per sample using R package vegan 2.5-6 in RStudio
+
+library("vegan")
+setwd("~/Desktop/vegan")
+DC_unnorm_to_flip <- read.table("~/Desktop/vegan/DCmerge_run3_topo_w3s_unnorm.csv",sep=",", header=TRUE, row.names=1)
+View(DC_unnorm_to_flip)
+DC_unnorm <- t(DC_unnorm_to_flip)
+View(DC_unnorm)
+DC_norm <- matrix(nrow=262,ncol=55207)
+DC_norm <- rrarefy(DC_unnorm,3025)
+View(DC_norm)
+DC_norm_flip <- t(DC_norm)
+View(DC_norm_flip)
+write.table(DC_norm_flip,"~/Desktop/vegan/DCmerge_run3_topo_w3s_10Dec20_norm3025.csv",sep=",")
+
+
+# singlet ASVs were manually removed
+# relative abundance was manually calculated in Excel
+
+
+# sequences were aligned in preparation for generating UniFrac matrix; in R on server
+
+library(DECIPHER)
+fas <- "~/DCmerge_topo_w3s/DCmerge_run3_topo_w3s_fasta_v2.txt"
+dna <- readDNAStringSet(fas)
+dna
+aligned_DNA <- AlignSeqs(dna)
+aligned_DNA
+DNA_staggered <- StaggerAlignment(aligned_DNA)
+DNA_staggered
+writeXStringSet(DNA_staggered, file="~/DCmerge_topo_w3s/DCmerge_run3_topo_w3s_alignedfasta_v2.txt")
+
+
+# weighted UniFrac matrix was generated using aligned sequences and relative abundance table; in R on server
+
+setwd("~/DCmerge_topo_w3s")
+library(phangorn)
+file="~/DCmerge_topo_w3s/DCmerge_run3_topo_w3s_alignedfasta_v2.txt"
+data = read.phyDat(file, format="fasta", type="DNA")
+matrix <- dist.ml(data)
+treeUPGMA <- upgma(matrix)
+pdf("~/DCmerge_topo_w3s/tree.pdf")
+plot(treeUPGMA, main="UPGMA")
+dev.off()
+OTUtab <- read.table("~/DCmerge_topo_w3s/DCmerge_run3_topo_w3s_relabund_v2.csv", sep=",", header=TRUE, row.names=1)
+library(phyloseq)
+OTU = otu_table(OTUtab, taxa_are_rows=TRUE)
+physeq = phyloseq(OTU, treeUPGMA)
+physeq
+UniFrac(physeq, weighted=TRUE, normalized=TRUE, parallel=FALSE, fast=TRUE)
