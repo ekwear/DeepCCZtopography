@@ -1,0 +1,464 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1671\cocoasubrtf600
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red38\green38\blue38;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c20000\c20000\c20000;\cssrgb\c0\c0\c0\c3922;}
+\margl1440\margr1440\vieww15320\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 #DESeq2 comparison code - many comparisons were conducted, all used same code\
+#here, comparison between 0.2 and 3 \'b5m filters in 5 MAB samples as an example\
+#RStudio\
+\
+\
+library(DESeq2)\
+\
+# importing count table and defined conditions from csvs generated in Excel\
+# previously added 1 to all cells to avoid issues with zeroes\
+\
+cts <- as.matrix(read.csv("~/Desktop/vegan/APEI7_5MAB_02vs3s_count.csv", sep=",", row.names=1))\
+cts\
+coldata <- read.csv("~/Desktop/vegan/APEI7_5MAB_02vs3s_condition.csv",sep=",",row.names=1)\
+coldata\
+dds <- DESeqDataSetFromMatrix(countData = cts, colData = coldata, design = ~ condition)\
+dds\
+\
+\
+# defining conditions to contrast - should therefore be log2(3/point2)\
+\
+dds$condition <- factor(dds$condition, levels = c("point2", "3"))\
+\
+# run DESeq algorithm\
+\
+dds <- DESeq(dds, 
+\fs25\fsmilli12600 \cf2 \cb3 \expnd0\expndtw0\kerning0
+minReplicatesForReplace=Inf
+\fs24 \cf0 \cb1 \kerning1\expnd0\expndtw0 )\
+res <- results(dds, alpha=0.05, pAdjustMethod="BH")\
+res\
+summary(res)\
+\
+write.csv(as.data.frame(res),file="~/Desktop/vegan/APEI7_5MAB_02vs3s_pooled_results.csv")\
+\
+\
+____________________________________________\
+\
+\
+R version 3.6.1 (2019-07-05) -- "Action of the Toes"\
+Copyright (C) 2019 The R Foundation for Statistical Computing\
+Platform: x86_64-apple-darwin15.6.0 (64-bit)\
+\
+R is free software and comes with ABSOLUTELY NO WARRANTY.\
+You are welcome to redistribute it under certain conditions.\
+Type 'license()' or 'licence()' for distribution details.\
+\
+  Natural language support but running in an English locale\
+\
+R is a collaborative project with many contributors.\
+Type 'contributors()' for more information and\
+'citation()' on how to cite R or R packages in publications.\
+\
+Type 'demo()' for some demos, 'help()' for on-line help, or\
+'help.start()' for an HTML browser interface to help.\
+Type 'q()' to quit R.\
+\
+[Workspace loaded from ~/.RData]\
+\
+> library(DESeq2)\
+Loading required package: S4Vectors\
+Loading required package: stats4\
+Loading required package: BiocGenerics\
+Loading required package: parallel\
+\
+Attaching package: \'91BiocGenerics\'92\
+\
+The following objects are masked from \'91package:parallel\'92:\
+\
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ, clusterExport,\
+    clusterMap, parApply, parCapply, parLapply, parLapplyLB, parRapply,\
+    parSapply, parSapplyLB\
+\
+The following objects are masked from \'91package:stats\'92:\
+\
+    IQR, mad, sd, var, xtabs\
+\
+The following objects are masked from \'91package:base\'92:\
+\
+    anyDuplicated, append, as.data.frame, basename, cbind, colnames, dirname,\
+    do.call, duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,\
+    is.unsorted, lapply, Map, mapply, match, mget, order, paste, pmax, pmax.int,\
+    pmin, pmin.int, Position, rank, rbind, Reduce, rownames, sapply, setdiff,\
+    sort, table, tapply, union, unique, unsplit, which, which.max, which.min\
+\
+\
+Attaching package: \'91S4Vectors\'92\
+\
+The following object is masked from \'91package:base\'92:\
+\
+    expand.grid\
+\
+Loading required package: IRanges\
+Loading required package: GenomicRanges\
+Loading required package: GenomeInfoDb\
+Loading required package: SummarizedExperiment\
+Loading required package: Biobase\
+Welcome to Bioconductor\
+\
+    Vignettes contain introductory material; view with 'browseVignettes()'. To\
+    cite Bioconductor, see 'citation("Biobase")', and for packages\
+    'citation("pkgname")'.\
+\
+Loading required package: DelayedArray\
+Loading required package: matrixStats\
+\
+Attaching package: \'91matrixStats\'92\
+\
+The following objects are masked from \'91package:Biobase\'92:\
+\
+    anyMissing, rowMedians\
+\
+Loading required package: BiocParallel\
+\
+Attaching package: \'91DelayedArray\'92\
+\
+The following objects are masked from \'91package:matrixStats\'92:\
+\
+    colMaxs, colMins, colRanges, rowMaxs, rowMins, rowRanges\
+\
+The following objects are masked from \'91package:base\'92:\
+\
+    aperm, apply, rowsum\
+\
+Warning messages:\
+1: package \'91S4Vectors\'92 was built under R version 3.6.3 \
+2: package \'91IRanges\'92 was built under R version 3.6.2 \
+3: package \'91GenomeInfoDb\'92 was built under R version 3.6.3 \
+4: package \'91SummarizedExperiment\'92 was built under R version 3.6.2 \
+5: package \'91DelayedArray\'92 was built under R version 3.6.3 \
+6: package \'91BiocParallel\'92 was built under R version 3.6.2 \
+> cts <- as.matrix(read.csv("~/Desktop/vegan/APEI7_5MAB_02vs3s_count.csv", sep=",", row.names=1))\
+> cts\
+          DC.C01N04.02 DC.C01N04.30 DC.C02N04.02 DC.C02N04.30\
+ASV_1               27           10           30           20\
+ASV_2                1            7            5           14\
+ASV_3               11            8            1           12\
+ASV_4             1306          259         1634          460\
+ASV_5              499           89          558          148\
+ASV_6                1            1            1            1\
+ASV_7                1            1            1            1\
+ASV_8                1            1            1            1\
+ASV_9               18           43           47           44\
+ASV_10               1            1            1            1\
+ASV_11               1            1            1            1\
+ASV_12               1            1            1            1\
+ASV_13               1            1            1            1\
+ASV_14               1            1            1            1\
+ASV_15               1            1            1            1\
+ASV_16               1            1            1            1\
+ASV_17               1            1            1            1\
+ASV_18             298          233          592          525\
+ASV_19             695          155          768          273\
+ASV_20               1            1            1            1\
+ASV_21               1            1            1            2\
+ASV_23               1            1            1            1\
+ASV_24               1           77            1            1\
+ASV_25               6           58           17            1\
+ASV_26             551          109          689          217\
+ASV_27               1            1            1            1\
+ASV_28               1            1            1            1\
+ASV_29               2            1            1            1\
+ASV_30               1            1            1            3\
+ASV_31               4            1            1            1\
+ASV_32               1            1            1            1\
+ASV_33               1            1            1            1\
+ASV_34               1           92            1            1\
+ASV_35               1            1            1            1\
+ASV_36              27            6           37           23\
+ASV_37               1            1            1            1\
+ASV_38               1            5            1            1\
+ASV_39               1            1            1            1\
+ASV_40               1            1            1            1\
+ASV_41               1            1            1            2\
+ASV_42               1            1            1            1\
+ASV_43               1            1            1            1\
+ASV_44               1            1            1            1\
+ASV_45               1            8            1            1\
+ASV_46               1            1            1            1\
+ASV_47               1            1            1            1\
+ASV_48               1            1            1            1\
+ASV_49               8            9            1            8\
+ASV_50               1            1            1            1\
+ASV_51               1            2            1            1\
+ASV_52             406           68          488          115\
+ASV_53               1            3            1            1\
+ASV_54               1            1            1            1\
+ASV_55               1            1            1            1\
+ASV_56               1            1            1            1\
+ASV_57             186           96          441          182\
+ASV_58               1            1            1            1\
+ASV_59               1            1            1            1\
+ASV_60               2            1            1            1\
+ASV_61             351           59          466          149\
+ASV_62               1            1            1            1\
+ASV_63               3            6            1            5\
+ASV_64              31            6           40           12\
+ASV_65             184           41          279           65\
+ASV_66               1            1            1            1\
+ASV_67               1            1            1            1\
+ASV_68               1            1            1            1\
+ASV_69               1            1            1            3\
+ASV_70               1            1            1            3\
+ASV_71               1            1            1            6\
+ASV_72               1            1            1            1\
+ASV_73              67           32           42           35\
+ASV_74             554          129          638          202\
+ASV_75               1            1            1            3\
+ASV_76             276           42          270           83\
+ASV_77               1            1            1            1\
+ASV_78               9            1           16            9\
+ASV_79               1            1            1            5\
+ASV_80               1            1            1            1\
+ASV_81               1            3            1            1\
+ASV_82             452           45          511          143\
+ASV_83               1           29            1            1\
+ASV_84               1            1          197           44\
+ASV_85               1            1           16            6\
+ASV_86             311           35          401          118\
+ASV_87             179           32          213           63\
+ASV_88               1            1            1            4\
+ASV_89               1            1            1            1\
+ASV_90               1            4            1            1\
+ASV_91               1            1            1            1\
+ASV_92               1            1            1            1\
+ASV_93               1            1            1            1\
+ASV_94             219           52          270          102\
+ASV_95              18           13           41           28\
+ASV_96               1            1            1            1\
+ASV_97               1            1            1            1\
+ASV_98              17            8           17            5\
+ASV_99               1            1            1            1\
+ASV_100              1            1            1            1\
+ASV_101             48            8           44           15\
+ASV_102              1            1            1            1\
+ASV_103              1            1            1            1\
+ASV_104              1            1            1            1\
+ASV_105              1            1            1            1\
+ASV_106              1            1            1            1\
+ASV_107             96          119          219          260\
+ASV_108              1            1            1            1\
+ASV_109              1            1            1            1\
+ASV_110              1            1            1            1\
+ASV_111              1            1            1            1\
+ASV_112              1            1            1            1\
+ASV_113              1            1            5            6\
+ASV_114              1            1            1            1\
+ASV_115              1            1            1            1\
+ASV_116             12            1           20            1\
+ASV_117              1            1            1            1\
+ASV_118              1            1            1            1\
+ASV_119              1            1            1            1\
+ASV_120              1            1            1            1\
+ASV_121              1            1            1            1\
+ASV_122              1            1            1            1\
+ASV_123              1            1            1            1\
+ASV_124              1            1            1            1\
+ASV_125              1            1            1            3\
+ASV_126            243          108          254          240\
+ASV_127              1            1            1            1\
+ASV_128              2            1            1            1\
+ASV_129              1            1            1            4\
+ASV_130            133           27          178           35\
+ASV_131              1            1            1            1\
+ASV_132              1            1           12            1\
+ASV_133              1            1            1            1\
+ASV_135              1            1            1            1\
+ASV_136              1            1            1            1\
+ASV_137              1            1            1            1\
+ASV_138              1            3            1            1\
+ASV_139            193           97          294          162\
+ASV_140             97           14           47            1\
+ASV_141              1            3            7            8\
+ASV_142              1            1            1            1\
+ASV_143            203          184          104          103\
+ASV_144              1            1            1            8\
+ASV_145              1            1            1            1\
+ASV_147              1            1            1            1\
+ASV_148              1            1            1            1\
+ASV_149              1            1            1            1\
+ASV_150              1            1            1            1\
+ASV_151             83           48          198          113\
+ASV_152              1            1            1            1\
+ASV_153              1            1            1            1\
+ASV_154              2            1            1            1\
+ASV_155              1            1            1            1\
+ASV_156            139           24          109           43\
+ASV_157              1            1            1            1\
+ASV_158            124           34          246           65\
+ASV_159              1            1            1            1\
+ASV_160              1            1            1            1\
+ASV_161              1            3            1            2\
+ASV_162              1            1            1            1\
+ASV_163              1            1            1            1\
+ASV_164              1            1            1            1\
+ASV_165              1            1            1            1\
+ASV_166              1            1            1            1\
+ASV_167            119           68          210          152\
+ASV_168              1            1            1            1\
+ASV_169              1           16            1            1\
+ASV_170              1            1            1            1\
+ASV_171              1            1            1            1\
+ASV_172            137           12          165           70\
+ASV_173              1            1            1            1\
+ASV_174              1            1            1            1\
+ASV_175              1            1            1            1\
+ASV_176            134           17          170           47\
+ASV_177              1            1            1            1\
+ASV_178              1            1            1            1\
+ASV_179              1            1            1            1\
+ASV_180              1            1            1            1\
+ASV_181              1            1            1            1\
+ASV_182              1            1            1            1\
+ASV_183              1            1            1            1\
+ASV_184              1            1            1            1\
+ASV_185              1            1            1            1\
+ASV_186              1            1            1            1\
+ASV_187              2            1            1            1\
+ASV_188              1            1            1            1\
+ASV_189              1            1            1            1\
+ASV_190              1            1            1            1\
+ASV_191              1            1            1            1\
+ASV_192              1           13            1            1\
+ASV_193              1            1            1            1\
+ASV_194              1            1            5            1\
+ASV_195              1            1            1            1\
+ASV_196              1            1            1            1\
+ASV_197              1            1            1            1\
+ASV_198              1            1            1            1\
+ASV_199              1            1            1            1\
+ASV_201              1            1            1            1\
+ASV_202              1            1            1            1\
+ASV_203              1            1            1            1\
+ASV_204              1            1            1            1\
+ASV_205              1            1            1            1\
+ASV_206              1            1            1            1\
+ASV_207              1            1            1            1\
+ASV_208              3           10           18           21\
+ASV_209              1            3            1            1\
+ASV_210              1            1            1            1\
+ASV_211              1            1            1            1\
+ASV_212            130           15          161           61\
+ASV_213              1            3            1            5\
+ASV_214              1            1            1            1\
+ASV_215              1            6            1            1\
+ASV_216              1            1            1            1\
+ASV_217              1            1            1            1\
+ASV_218              2            1            3            5\
+ASV_219              1            1            1            1\
+ASV_220              1            1            1            1\
+ASV_221             30            1           24           16\
+ASV_222              1            1            1            1\
+ASV_223              1            1            1            1\
+ASV_224              1            1            1            1\
+ASV_225              1            1            1            1\
+ASV_226             76           12          104           27\
+ASV_227              1            1            1            1\
+ASV_228            147           34          169           38\
+ASV_229              1            1            1            1\
+ASV_230              1            1            1            5\
+ASV_231             89           13          110           35\
+ASV_232              1            9            1            1\
+ASV_233              1            1            1            1\
+ASV_234              1            5            1            1\
+ASV_235              1            1            1            1\
+ASV_236              1            1            1            1\
+ASV_237              1            1            1            1\
+ASV_238              1            1            1            1\
+ASV_239            132           26            1            1\
+ASV_240              1            1            1            1\
+ASV_241              1            1            1            1\
+ASV_242              1            1            1            1\
+ASV_243              1            1            1            1\
+ASV_244              1            1            1            1\
+ASV_245            150           26          214           73\
+ASV_246              1            1            1            1\
+ASV_247              1            1            1            1\
+ASV_248              1            1            1            1\
+ASV_249              1            1            1            1\
+ASV_250              1            1            1            1\
+ASV_251              1            1            1            1\
+ASV_252              1            1            1            1\
+ASV_253              1            1            1            1\
+ASV_254             91           39          165           77\
+ [ reached getOption("max.print") -- omitted 54957 rows ]\
+> coldata <- read.csv("~/Desktop/vegan/APEI7_5MAB_02vs3s_condition.csv",sep=",",row.names=1)\
+Warning message:\
+In read.table(file = file, header = header, sep = sep, quote = quote,  :\
+  incomplete final line found by readTableHeader on '~/Desktop/vegan/APEI7_5MAB_02vs3s_condition.csv'\
+> coldata\
+             condition       type\
+DC-C01N04-02    point2 paired-end\
+DC-C01N04-30         3 paired-end\
+DC-C02N04-02    point2 paired-end\
+DC-C02N04-30         3 paired-end\
+> dds <- DESeqDataSetFromMatrix(countData = cts, colData = coldata, design = ~ condition)\
+> dds\
+class: DESeqDataSet \
+dim: 55207 4 \
+metadata(1): version\
+assays(1): counts\
+rownames(55207): ASV_1 ASV_2 ... ASV_56317 ASV_56318\
+rowData names(0):\
+colnames(4): DC-C01N04-02 DC-C01N04-30 DC-C02N04-02 DC-C02N04-30\
+colData names(2): condition type\
+> dds$condition <- factor(dds$condition, levels = c("point2", "3"))\
+> dds <- DESeq(dds, minReplicatesForReplace=Inf)\
+estimating size factors\
+estimating dispersions\
+gene-wise dispersion estimates\
+mean-dispersion relationship\
+final dispersion estimates\
+fitting model and testing\
+> res <- results(dds, alpha=0.05, pAdjustMethod="BH")\
+> res\
+log2 fold change (MLE): condition 3 vs point2 \
+Wald test p-value: condition 3 vs point2 \
+DataFrame with 55207 rows and 6 columns\
+           baseMean      log2FoldChange             lfcSE                 stat\
+          <numeric>           <numeric>         <numeric>            <numeric>\
+ASV_1         21.75  -0.925996076443073  1.01176048420767   -0.915232499091164\
+ASV_2          6.75    1.80735291903816  1.47212150022284      1.2277199393967\
+ASV_3             8   0.736966787983698  1.41501611570268     0.52081865344532\
+ASV_4        914.75   -2.03174790078391 0.793353760484858    -2.56096082476777\
+ASV_5         323.5   -2.15701219011743  0.79794352068061    -2.70321411755759\
+...             ...                 ...               ...                  ...\
+ASV_56314         1 1.9461094100899e-15  2.89077824258319 6.73212971310753e-16\
+ASV_56315         1 1.9461094100899e-15  2.89077824258319 6.73212971310753e-16\
+ASV_56316         1 1.9461094100899e-15  2.89077824258319 6.73212971310753e-16\
+ASV_56317         1 1.9461094100899e-15  2.89077824258319 6.73212971310753e-16\
+ASV_56318         1 1.9461094100899e-15  2.89077824258319 6.73212971310753e-16\
+                       pvalue              padj\
+                    <numeric>         <numeric>\
+ASV_1       0.360069586803991 0.999999999999999\
+ASV_2       0.219552118683976 0.999999999999999\
+ASV_3       0.602493107397787 0.999999999999999\
+ASV_4      0.0104383125888407 0.999999999999999\
+ASV_5     0.00686724932838905 0.999999999999999\
+...                       ...               ...\
+ASV_56314   0.999999999999999 0.999999999999999\
+ASV_56315   0.999999999999999 0.999999999999999\
+ASV_56316   0.999999999999999 0.999999999999999\
+ASV_56317   0.999999999999999 0.999999999999999\
+ASV_56318   0.999999999999999 0.999999999999999\
+> summary(res)\
+\
+out of 55207 with nonzero total read count\
+adjusted p-value < 0.05\
+LFC > 0 (up)       : 9, 0.016%\
+LFC < 0 (down)     : 2, 0.0036%\
+outliers [1]       : 0, 0%\
+low counts [2]     : 0, 0%\
+(mean count < 1)\
+[1] see 'cooksCutoff' argument of ?results\
+[2] see 'independentFiltering' argument of ?results\
+\
+> write.csv(as.data.frame(res),file="~/Desktop/vegan/APEI7_5MAB_02vs3s_pooled_results.csv")\
+}
